@@ -1,0 +1,58 @@
+name: Publish RPMs
+
+# Reusable workflow — call with `secrets: inherit` from any oVirt project:
+#
+#   publish-rpms:
+#     needs: build
+#     if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+#     uses: ovirt/ovirt-workflows/.github/workflows/publish-rpms.yml@main
+#     secrets: inherit
+#
+# Required repository secrets:
+#   SSH_USERNAME_FOR_RESOURCES_OVIRT_ORG
+#   SSH_KEY_FOR_RESOURCES_OVIRT_ORG
+#   KNOWN_HOSTS_FOR_RESOURCES_OVIRT_ORG
+#
+# The calling repository must upload per-distro artifacts in its build job:
+#   uses: actions/upload-artifact@v7
+#   with:
+#     name: rpm-<shortcut>   # e.g. rpm-el9, rpm-el10, rpm-el9s, rpm-el10s
+#     path: <artifacts-dir>
+on:
+  workflow_call:
+    secrets:
+      SSH_USERNAME_FOR_RESOURCES_OVIRT_ORG:
+        required: true
+      SSH_KEY_FOR_RESOURCES_OVIRT_ORG:
+        required: true
+      KNOWN_HOSTS_FOR_RESOURCES_OVIRT_ORG:
+        required: true
+
+jobs:
+  publish-rpms:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        shortcut: [el9, el10, el9s, el10s]
+
+    steps:
+      - name: Download RPM artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: rpm-${{ matrix.shortcut }}
+          path: exported-artifacts
+
+      - name: Upload to resources.ovirt.org
+        uses: ovirt/ovirt-resources-upload-action@main
+        with:
+          username: ${{ secrets.SSH_USERNAME_FOR_RESOURCES_OVIRT_ORG }}
+          key: ${{ secrets.SSH_KEY_FOR_RESOURCES_OVIRT_ORG }}
+          known_hosts: ${{ secrets.KNOWN_HOSTS_FOR_RESOURCES_OVIRT_ORG }}
+          source: exported-artifacts/*.rpm
+          target: ovirt-master-snapshot/rpm/${{ matrix.shortcut }}/${{ github.event.repository.name }}/${{ github.run_id }}
+          cleanup_dir: ovirt-master-snapshot/rpm/${{ matrix.shortcut }}/${{ github.event.repository.name }}
+          create_target_dir: yes
+          createrepo: yes
+          createrepo_dir: ovirt-master-snapshot/rpm/${{ matrix.shortcut }}
