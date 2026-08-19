@@ -61,8 +61,8 @@ jobs:
           key: ${{ secrets.SSH_KEY_FOR_RESOURCES_OVIRT_ORG }}
           known_hosts: ${{ secrets.KNOWN_HOSTS_FOR_RESOURCES_OVIRT_ORG }}
           source: exported-artifacts/*.rpm
-          target: ovirt-master-snapshot/rpm/${{ inputs.arch }}/${{ matrix.shortcut }}/${{ github.event.repository.name }}/${{ github.run_id }}
-          cleanup_dir: ovirt-master-snapshot/rpm/${{ inputs.arch }}/${{ matrix.shortcut }}/${{ github.event.repository.name }}
+          target: ovirt-master-snapshot/rpm/${{ matrix.shortcut }}/${{ inputs.arch }}/${{ github.event.repository.name }}/${{ github.run_id }}
+          cleanup_dir: ovirt-master-snapshot/rpm/${{ matrix.shortcut }}/${{ inputs.arch }}/${{ github.event.repository.name }}
           create_target_dir: yes
           createrepo: yes
-          createrepo_dir: ovirt-master-snapshot/rpm/${{ inputs.arch }}/${{ matrix.shortcut }}
+          createrepo_dir: ovirt-master-snapshot/rpm/${{ matrix.shortcut }}/${{ inputs.arch }}
